@@ -1,0 +1,26 @@
+{
+  "name": "cryptography-toolbox",
+  "productName": "密码工具箱",
+  "version": "1.0.0",
+  "description": "本地运行的 AES、SM4 和 SM3 密码工具",
+  "author": "密码工具箱",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "src/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test",
+    "dist:win": "electron-builder --config electron-builder.config.cjs --win nsis --x64 --publish never"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "electron-updater": "6.8.12",
+    "sm-crypto": "0.5.9"
+  },
+  "devDependencies": {
+    "electron": "45.5.0",
+    "electron-builder": "26.18.0"
+  }
+}

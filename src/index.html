@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'">
+    <meta name="color-scheme" content="dark">
+    <title>密码工具箱</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="renderer.js" defer></script>
+  </head>
+  <body>
+    <header class="app-bar">
+      <div class="app-bar-inner">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"><span></span></span>
+          <span>密码工具箱</span>
+        </div>
+        <button class="button button-secondary update-trigger" id="open-update" type="button" aria-haspopup="dialog">
+          <span class="update-indicator" id="update-indicator" aria-hidden="true"></span>
+          <span id="update-trigger-label">检查更新</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <div class="workspace-heading">
+        <div>
+          <h1>加解密工作台</h1>
+          <p>在本机加密与解密文本，或计算与校验摘要。</p>
+        </div>
+      </div>
+
+      <form id="workbench">
+        <div class="tool-strip">
+          <fieldset class="tool-group">
+            <legend class="screen-reader-only">算法</legend>
+            <span class="tool-group-label" aria-hidden="true">算法</span>
+            <div class="segmented">
+              <label><input type="radio" name="algorithm" value="aes" checked><span>AES</span></label>
+              <label><input type="radio" name="algorithm" value="sm4"><span>SM4</span></label>
+              <label><input type="radio" name="algorithm" value="sm3"><span>SM3</span></label>
+            </div>
+          </fieldset>
+          <fieldset class="tool-group">
+            <legend class="screen-reader-only">操作</legend>
+            <span class="tool-group-label" aria-hidden="true">操作</span>
+            <div class="segmented">
+              <label><input type="radio" name="direction" value="forward" checked><span id="forward-label">加密</span></label>
+              <label><input type="radio" name="direction" value="reverse"><span id="reverse-label">解密</span></label>
+            </div>
+          </fieldset>
+        </div>
+
+        <div class="editors">
+          <section class="editor">
+            <div class="editor-header">
+              <label class="editor-title" for="input" id="input-label">输入明文</label>
+              <button class="button button-quiet" id="clear" type="button" disabled>清空</button>
+            </div>
+            <textarea class="editor-text" id="input" placeholder="在这里输入或粘贴明文…" spellcheck="false" autocomplete="off"></textarea>
+            <div class="editor-footer">
+              <span id="input-size">0 字节</span>
+            </div>
+          </section>
+
+          <section class="editor">
+            <div class="editor-header">
+              <label class="editor-title" for="output" id="output-label">输出密文</label>
+              <div class="editor-actions">
+                <button class="button button-quiet" id="swap" type="button" title="将结果转入输入并切换操作" disabled>转入输入</button>
+                <button class="button button-quiet" id="copy" type="button" disabled>复制</button>
+              </div>
+            </div>
+            <textarea class="editor-text" id="output" placeholder="处理结果将显示在这里…" spellcheck="false" readonly></textarea>
+            <div class="editor-footer">
+              <span id="output-size">0 字节</span>
+              <span class="result-badge" id="verification" hidden></span>
+            </div>
+          </section>
+        </div>
+
+        <section class="configuration" aria-label="操作设置">
+          <div class="configuration-fields" id="cipher-fields">
+            <div class="field field-mode">
+              <label for="mode">加密模式</label>
+              <select id="mode">
+                <option value="aes-gcm">AES-GCM</option>
+                <option value="aes-cbc">AES-CBC</option>
+              </select>
+              <span class="static-value" id="sm4-mode" hidden>SM4-CBC</span>
+            </div>
+            <div class="field field-format">
+              <label for="format">密文格式</label>
+              <select id="format">
+                <option value="envelope">密文包</option>
+                <option value="raw">原始密文</option>
+              </select>
+            </div>
+            <div class="field field-encoding" id="cipher-encoding-field">
+              <label for="cipher-encoding">密文编码</label>
+              <select id="cipher-encoding">
+                <option value="base64">Base64</option>
+                <option value="hex">Hex</option>
+              </select>
+            </div>
+            <div class="field field-key-format">
+              <label for="key-format">密钥类型</label>
+              <select id="key-format">
+                <option value="password">口令</option>
+                <option value="hex">Hex 密钥</option>
+                <option value="base64">Base64 密钥</option>
+              </select>
+            </div>
+            <div class="field field-key">
+              <label for="key" id="key-label">口令</label>
+              <div class="key-input">
+                <input id="key" type="password" placeholder="输入口令" spellcheck="false" autocomplete="off" aria-describedby="settings-hint">
+                <button class="button button-quiet visibility-toggle" id="toggle-key" type="button" aria-label="切换口令或密钥可见性" aria-pressed="false">显示</button>
+              </div>
+            </div>
+            <div class="field field-iv" id="iv-field" hidden>
+              <label for="iv">初始向量（Hex）</label>
+              <input id="iv" type="text" placeholder="留空时自动生成" spellcheck="false" autocomplete="off" aria-describedby="settings-hint">
+            </div>
+            <div class="field field-tag" id="tag-field" hidden>
+              <label for="tag">认证标签（Hex）</label>
+              <input id="tag" type="text" placeholder="输入 32 个十六进制字符" spellcheck="false" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="configuration-fields" id="hash-fields" hidden>
+            <div class="field field-encoding">
+              <label for="hash-encoding">摘要编码</label>
+              <select id="hash-encoding">
+                <option value="hex">Hex</option>
+                <option value="base64">Base64</option>
+              </select>
+            </div>
+            <div class="field field-expected" id="expected-field" hidden>
+              <label for="expected">预期摘要</label>
+              <input id="expected" type="text" placeholder="粘贴要校验的摘要" spellcheck="false" autocomplete="off">
+            </div>
+          </div>
+
+          <p class="settings-hint" id="settings-hint">密文包包含解密所需的参数。解密时请使用相同口令。</p>
+          <div class="metadata" id="metadata" hidden>
+            <div class="metadata-item" id="result-iv-row" hidden>
+              <label for="result-iv">初始向量（Hex）</label>
+              <input class="monospace" id="result-iv" readonly>
+              <button class="button button-quiet" id="copy-iv" type="button" aria-label="复制初始向量">复制</button>
+            </div>
+            <div class="metadata-item" id="result-tag-row" hidden>
+              <label for="result-tag">认证标签（Hex）</label>
+              <input class="monospace" id="result-tag" readonly>
+              <button class="button button-quiet" id="copy-tag" type="button" aria-label="复制认证标签">复制</button>
+            </div>
+          </div>
+        </section>
+
+        <div class="action-bar">
+          <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+          <span class="keyboard-hint" title="运行当前操作">Ctrl + Enter</span>
+          <button class="button button-primary" id="run" type="submit">加密</button>
+        </div>
+      </form>
+    </main>
+
+    <dialog class="update-dialog" id="update-dialog" aria-labelledby="update-title">
+      <div class="dialog-heading">
+        <div>
+          <h2 id="update-title">软件更新</h2>
+          <p id="current-version">正在获取当前版本…</p>
+        </div>
+        <button class="button dialog-close" id="close-update" type="button" aria-label="关闭更新窗口" autofocus>×</button>
+      </div>
+      <div class="update-content" aria-live="polite">
+        <p class="update-status" id="update-status">准备检查更新</p>
+        <p class="update-message" id="update-message" hidden></p>
+        <div class="update-progress" id="update-progress" hidden>
+          <progress id="progress" max="100" aria-label="更新下载进度"></progress>
+          <span id="progress-value"></span>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="button button-primary" id="update-action" type="button">检查更新</button>
+      </div>
+    </dialog>
+  </body>
+</html>
