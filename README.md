@@ -37,4 +37,4 @@ npm.cmd start
 
 ## 发布新版本
 
-修改版本号并提交后，推送与版本号匹配的正式标签，例如 `v1.0.1`。GitHub Actions 会运行测试、打包，并把安装程序、`.blockmap` 与 `latest.yml` 发布到同一个 GitHub Release。已安装的客户端使用这些文件检查并安装新版本。
+修改版本号并提交后，推送与版本号匹配的正式标签，例如 `v0.1.1`。GitHub Actions 会运行测试、打包，并把安装程序、`.blockmap` 与 `latest.yml` 发布到同一个 GitHub Release。已安装的客户端使用这些文件检查并安装新版本。

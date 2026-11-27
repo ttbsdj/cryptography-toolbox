@@ -1,7 +1,7 @@
 {
   "name": "cryptography-toolbox",
   "productName": "密码工具箱",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "本地运行的 AES、SM4 和 SM3 密码工具",
   "author": "密码工具箱",
   "license": "UNLICENSED",
